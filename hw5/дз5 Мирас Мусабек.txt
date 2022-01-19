@@ -1,0 +1,62 @@
+1)
+CREATE TABLE cal_new(
+       calendar_date date,
+       calendar_day_name varchar2(100)
+);
+
+DECLARE 
+   new_cal cal_new%rowtype; 
+BEGIN 
+   Insert into cal_new Select calendar.calendar_date, calendar.calendar_day_name from calendar;
+END;
+
+DECLARE
+   TYPE new_cal IS RECORD(
+        calendar_date calendar.calendar_date%TYPE,
+        calendar_day_name calendar.calendar_day_name%TYPE
+   );
+   perem new_cal;
+BEGIN
+   INSERT INTO cal_new(calendar_date, calendar_day_name)
+   SELECT cal.calendar_date, cal.calendar_day_name
+   FROM calendar cal ;
+END;
+
+
+2)
+CREATE TABLE another_calendar(
+       calendar_date date,
+       CALENDAR_YEAR NUMBER(22),
+       CALENDAR_MONTH_NUMBER NUMBER(22),
+       CALENDAR_MONTH_NAME varchar2(100),
+       CALENDAR_DAY_OF_MONTH NUMBER(22),
+       CALENDAR_DAY_OF_WEEK NUMBER(22),
+       calendar_day_name varchar2(100),
+       CALENDAR_YEAR_MONTH NUMBER (22)
+);
+
+DECLARE 
+   new_cal another_calendar%rowtype; 
+BEGIN 
+   Insert into another_calendar Select * from calendar WHERE calendar.calendar_year < 2017;
+END;
+
+DECLARE 
+   TYPE new_cal IS TABLE OF another_calendar%rowtype
+BEGIN
+   Insert into another_calendar Select * from calendar WHERE calendar.calendar_year < 2017;
+END;
+
+3)
+DECLARE
+   TYPE new_cal IS VARRAY(100) OF NUMBER;
+BEGIN
+  INSERT INTO
+   new_cal SELECT DISTINCT calendar.calendar_month_name
+   LOOP 
+      dbms_output.put_line(new_cal); 
+   END LOOP; 
+END;
+
+
+

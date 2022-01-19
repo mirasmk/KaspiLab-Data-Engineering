@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  database:
+    image: mysql:8.0
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
+    environment:
+      - MYSQL_DATABASE=codetest
+      - MYSQL_USER=codetest
+      - MYSQL_PASSWORD=swordfish
+      - MYSQL_ROOT_PASSWORD=swordfish
+    ports:
+      - 3306:3306

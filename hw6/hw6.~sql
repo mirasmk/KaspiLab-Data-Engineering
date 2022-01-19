@@ -1,0 +1,84 @@
+SELECT * FROM
+
+CREATE OR REPLACE FUNCTION hw5(
+       numb IN INT
+)
+RETURN VARCHAR(20)
+is arab_roman VARCHAR(20);
+BEGIN
+    arab_roman = Replicate('M', numb/1000)  
+            + REPLACE(REPLACE(REPLACE(  
+                  Replicate('C', numb%1000/100),  
+                  Replicate('C', 9), 'CM'),  
+                  Replicate('C', 5), 'D'),  
+                  Replicate('C', 4), 'CD')  
+             + REPLACE(REPLACE(REPLACE(  
+                  Replicate('X', numb%100 / 10),  
+                  Replicate('X', 9),'XC'),  
+                  Replicate('X', 5), 'L'),  
+                  Replicate('X', 4), 'XL')  
+             + REPLACE(REPLACE(REPLACE(  
+                  Replicate('I', numb%10),  
+                  Replicate('I', 9),'IX'),  
+                  Replicate('I', 5), 'V'),  
+                  Replicate('I', 4),'IV') 
+    RETURN (arab_roman);
+END;
+
+CREATE OR REPLACE PROCEDURE hw5_1(pNAME IN VARCHAR)
+CURSOR it IS
+              SELECT table2.*,
+              CASE
+              WHEN table2.MEMBER_LIFECYCLE_STATUS='Lapsed' THEN ROW_NUMBER() OVER(PARTITION BY
+              table2.MEMBER_LIFECYCLE_STATUS  ORDER BY table2.member_id)
+              ELSE 0
+              END LAPSED_MONTH
+              FROM
+              (
+              SELECT
+              table1.*,
+              CASE
+              WHEN rev.activity_year_month IS NULL THEN 'Lapsed'
+              ELSE 'Active'
+              END AS MEMBER_LIFECYCLE_STATUS
+              FROM
+              (
+              SELECT DISTINCT
+              coalesce(rev.member_id, 1001) AS member_id,
+              cal.calendar_year_month
+              FROM calendar cal
+              LEFT JOIN revenue_analysis rev ON cal.calendar_year_month=rev.activity_year_month
+              WHERE rev.member_id=1001 OR rev.member_id IS NULL
+              UNION
+              SELECT DISTINCT
+              coalesce(rev.member_id, 1002) member_id,
+              cal.calendar_year_month
+              FROM calendar cal
+              LEFT JOIN revenue_analysis rev ON cal.calendar_year_month=rev.activity_year_month
+              WHERE rev.member_id=1002 OR rev.member_id IS NULL
+              UNION
+              SELECT DISTINCT
+              coalesce(rev.member_id, 1003) member_id,
+              cal.calendar_year_month
+              FROM calendar cal
+              LEFT JOIN revenue_analysis rev ON cal.calendar_year_month=rev.activity_year_month
+              WHERE rev.member_id=1003 OR rev.member_id IS NULL
+              ORDER BY member_id, calendar_year_month
+              ) table1
+
+              LEFT JOIN revenue_analysis rev ON table1.calendar_year_month=rev.activity_year_month AND
+              table1.member_id=rev.member_id
+              ) table2
+              ORDER BY member_id, calendar_year_month
+IS
+BEGIN
+  OPEN it;
+  LOOP
+  FETCH it INTO table2;
+  INSERT INTO test.cw_05_02(NAME, SURNAME)
+  VALUES(pNAME, pSURNAME);
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('INSERTED NAME: ' || pNAME || ' SURNAME: ' ||pSURNAME);
+END;
+
+CALL test.lab_05_02('Ivan', 'Kim');
